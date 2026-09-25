@@ -395,8 +395,13 @@ def open_folder(jid):
         subprocess.Popen(["xdg-open", p])
     return jsonify(ok=True)
 
-
 if __name__ == "__main__":
-    print(f"\n  Downloader is running at http://127.0.0.1:{PORT}\n  Keep this window open. Press Ctrl+C to stop.\n")
-    threading.Timer(1.2, lambda: webbrowser.open(f"http://127.0.0.1:{PORT}")).start()
-    app.run(host="127.0.0.1", port=PORT, threaded=True)
+    PORT = int(os.environ.get("PORT", 8765))
+
+    print(f"Downloader is running on port {PORT}")
+
+    app.run(
+        host="0.0.0.0",
+        port=PORT,
+        threaded=True
+    )
