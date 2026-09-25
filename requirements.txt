@@ -1,0 +1,5 @@
+flask>=3.0
+browser_cookie3
+yt-dlp[default]
+gallery-dl
+imageio-ffmpeg

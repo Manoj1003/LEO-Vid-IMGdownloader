@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LEO — Paste any link.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0C0F'/%3E%3Ctext x='32' y='44' font-family='Arial,sans-serif' font-weight='700' font-size='34' fill='%23FF5A3C' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0C0F; --ink:#F3F1EC; --muted:#B8B3AA;
+  --panel:rgba(255,255,255,.07); --panel-strong:rgba(255,255,255,.12); --edge:rgba(255,255,255,.16);
+  --accent:#FF5A3C; --accent-ink:#1A0603; --ok:#6FDBA0; --bad:#FF8A80;
+  --scrim-1:rgba(6,4,4,.18); --scrim-2:rgba(8,5,5,.52);
+  --overlay:rgba(0,0,0,.45);
+  box-sizing:border-box; color-scheme:dark;
+}
+[data-theme="light"]{
+  --bg:#F4F1EA; --ink:#191512; --muted:#665F57;
+  --panel:rgba(255,255,255,.55); --panel-strong:rgba(255,255,255,.78); --edge:rgba(25,21,18,.12);
+  --accent:#C1341F; --accent-ink:#FFF6F2; --ok:#1B7A46; --bad:#B3261E;
+  --scrim-1:rgba(244,241,234,.25); --scrim-2:rgba(244,241,234,.6);
+  --overlay:rgba(255,255,255,.35);
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink); font:16px/1.55 'Manrope',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  position:relative; min-height:100vh; min-height:100dvh;
+}
+.hero-bg{
+  position:fixed; inset:0; z-index:-1; background:var(--bg);
+  background-image:
+    radial-gradient(60% 50% at 20% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 70%),
+    radial-gradient(55% 45% at 100% 15%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(70% 60% at 50% 115%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%);
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:0;
+  background:linear-gradient(180deg,var(--scrim-1) 0%, var(--scrim-2) 88%, var(--scrim-2) 100%);
+  backdrop-filter:blur(9px) saturate(122%); -webkit-backdrop-filter:blur(9px) saturate(122%);
+}
+main{position:relative; z-index:1; max-width:640px; margin:0 auto; padding:48px 20px 90px}
+
+.brand{display:flex; align-items:center; gap:12px; justify-content:center; margin-bottom:6px}
+.brand span{
+  font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif; font-size:2.1rem; letter-spacing:.14em;
+  line-height:1; padding-top:3px;
+}
+.tagline{text-align:center; color:var(--muted); margin:0 0 34px; font-size:.98rem}
+
+.reel{display:flex; justify-content:center; gap:7px; margin:0 0 30px; opacity:.5}
+.reel i{width:5px; height:5px; border-radius:50%; background:var(--edge)}
+
+h1{
+  font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif; font-weight:400;
+  font-size:clamp(2.3rem,7vw,3.4rem); letter-spacing:.01em; line-height:1; margin:0 0 12px; text-align:center;
+}
+.lead{color:var(--muted); margin:0 0 30px; max-width:46ch; text-align:center; margin-inline:auto; font-size:1.02rem}
+
+.panel{
+  background:var(--panel); border:1px solid var(--edge); border-radius:20px; padding:26px;
+  backdrop-filter:blur(22px) saturate(140%); -webkit-backdrop-filter:blur(22px) saturate(140%);
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.45);
+}
+label,legend{font-weight:650; font-size:.92rem; display:block; margin:0 0 8px; padding:0; color:var(--ink)}
+fieldset{border:0; margin:24px 0 0; padding:0}
+input[type=text]{
+  width:100%; font:inherit; color:var(--ink); background:var(--overlay); border:1.5px solid var(--edge);
+  border-radius:12px; padding:12px 14px;
+}
+#url{font-size:1.08rem; padding:17px 18px; background:var(--panel-strong)}
+input::placeholder{color:var(--muted)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+#msg{min-height:1.6em; margin:10px 2px 0; font-size:.94rem; color:var(--muted); overflow-wrap:anywhere}
+#msg.ok{color:var(--ok)} #msg.bad{color:var(--bad)}
+
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{
+  font:inherit; font-weight:600; font-size:.92rem; padding:9px 15px; border-radius:999px;
+  border:1.5px solid var(--edge); background:var(--overlay); color:var(--ink); cursor:pointer;
+}
+.chip[aria-pressed=true]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.chip:disabled{opacity:.32; cursor:not-allowed}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:9px}
+.link{background:none; border:0; color:var(--accent); font:inherit; font-weight:700; cursor:pointer; padding:4px 2px; font-size:.9rem}
+.hint{color:var(--muted); font-size:.88rem; margin:9px 0 0}
+
+.btn{
+  width:100%; margin-top:28px; font:inherit; font-size:1.08rem; font-weight:750; padding:16px; border:0;
+  border-radius:13px; background:var(--accent); color:var(--accent-ink); cursor:pointer;
+}
+.btn:disabled{opacity:.4; cursor:not-allowed}
+.btn.alt{background:transparent; color:var(--ink); border:1.5px solid var(--edge); margin-top:12px; font-size:.98rem; padding:12px}
+#run{margin-top:20px}
+.bar{height:10px; background:var(--overlay); border-radius:99px; overflow:hidden; margin:14px 0 8px; border:1px solid var(--edge)}
+.bar>i{display:block; height:100%; width:0; background:var(--accent); transition:width .4s}
+.bar.busy>i{width:35%!important; animation:slide 1.2s ease-in-out infinite alternate}
+@keyframes slide{from{margin-left:0}to{margin-left:65%}}
+.sub{margin:4px 0 6px; font-size:.94rem; font-variant-numeric:tabular-nums}
+#statMain{font-size:1.22rem; font-variant-numeric:tabular-nums; font-family:'Bebas Neue',Impact,sans-serif; letter-spacing:.02em; font-weight:400}
+.cur{color:var(--muted); font-size:.89rem; overflow-wrap:anywhere}
+.fails{margin:14px 0 0; padding:0; list-style:none; font-size:.89rem; color:var(--bad); max-height:180px; overflow:auto}
+.fails li{margin:0 0 8px}
+[hidden]{display:none!important}
+
+.themebtn{
+  position:fixed; top:20px; right:20px; z-index:2; width:42px; height:42px; border-radius:50%;
+  border:1px solid var(--edge); background:var(--panel-strong); color:var(--ink); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; backdrop-filter:blur(16px);
+}
+.themebtn svg{width:19px; height:19px}
+.themebtn .sun{display:none} [data-theme="light"] .themebtn .moon{display:none} [data-theme="light"] .themebtn .sun{display:block}
+
+footer{text-align:center; color:var(--muted); font-size:.82rem; margin-top:30px}
+
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none} .bar.busy>i{animation:none}}
+</style>
+</head>
+<body>
+<div class="hero-bg"></div>
+<button class="themebtn" id="theme" type="button" aria-label="Switch between light and dark">
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.5 12H2.1M21.9 12h-2.4M6 6l1.6 1.6M16.4 16.4 18 18M18 6l-1.6 1.6M7.6 16.4 6 18"/></svg>
+</button>
+
+<main>
+  <div class="brand">
+    <span>LEO</span>
+  </div>
+  <p class="tagline">Paste. Pick a format. It's on your drive.</p>
+
+  <div class="reel" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+  <h1>Paste any link.</h1>
+  <p class="lead">Videos, music and photos from YouTube, Instagram, X, TikTok, Pinterest, Reddit and hundreds more sites. No account, no sign-in.</p>
+
+  <section class="panel">
+    <label for="url">Link to a video, song, photo or playlist</label>
+    <input id="url" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://..." autofocus>
+    <div id="msg" role="status" aria-live="polite"></div>
+
+    <fieldset>
+      <legend>What to save</legend>
+      <div class="chips" id="chips"></div>
+      <div class="row">
+        <button class="link" type="button" id="all">Select all</button>
+        <button class="link" type="button" id="none">Clear</button>
+      </div>
+      <p class="hint" id="count"></p>
+    </fieldset>
+
+    <button class="btn" id="go" type="button" disabled>Download</button>
+
+    <div id="run" hidden>
+      <div class="bar" id="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="fill"></i></div>
+      <div id="stat"><b id="statMain">Starting…</b></div>
+      <div class="sub" id="sub"></div>
+      <div class="cur" id="cur"></div>
+      <ul class="fails" id="fails"></ul>
+      <button class="btn alt" id="cancel" type="button">Stop</button>
+      <button class="btn alt" id="open" type="button" hidden>Open folder</button>
+    </div>
+  </section>
+
+  <footer>Runs on this computer only. Nothing is uploaded anywhere.</footer>
+</main>
+
+<script>
+const root = document.documentElement;
+const saved = localStorage.getItem("leo-theme");
+if (saved) root.setAttribute("data-theme", saved);
+else if (window.matchMedia("(prefers-color-scheme: light)").matches) root.setAttribute("data-theme", "light");
+document.getElementById("theme").onclick = () => {
+  const next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+  root.setAttribute("data-theme", next); localStorage.setItem("leo-theme", next);
+};
+
+const $ = s => document.querySelector(s);
+const QUALS = [["mp3","MP3 audio"],["1080","MP4 1080p"],["720","MP4 720p"],["480","MP4 480p"],["360","MP4 360p"],["240","MP4 240p"],["144","MP4 144p"],["images","Images / photos"]];
+let sel = new Set(["720"]), info = null, jobId = null, timer = null, busy = false, seq = 0, debounce;
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function api(path, body) {
+  const r = await fetch(path, {method: body ? "POST" : "GET", headers: {"Content-Type":"application/json"}, body: body ? JSON.stringify(body) : undefined});
+  let j = {}; try { j = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error(j.error || "Something went wrong. Try again.");
+  return j;
+}
+function setMsg(html, cls) { const m = $("#msg"); m.innerHTML = html || ""; m.className = cls || ""; }
+const allowed = v => !info || (v === "images" ? info.images_ok : info.video_ok);
+
+function drawChips() {
+  $("#chips").innerHTML = QUALS.map(([v,l]) => `<button type="button" class="chip" data-v="${v}" aria-pressed="${sel.has(v)}" ${allowed(v) ? "" : "disabled"}>${l}</button>`).join("");
+  update();
+}
+function update() {
+  const vf = [...sel].filter(v => v !== "images").length, img = sel.has("images");
+  let t = "";
+  if (info && sel.size) {
+    const parts = [];
+    if (vf && info.video_ok) { const n = info.count * vf; parts.push(`${n} video/audio file${n==1?"":"s"}`); }
+    if (img) parts.push("all photos found at this link");
+    t = parts.join(" + ") + (vf ? ". Higher qualities take more time and disk space." : ".");
+  }
+  $("#count").textContent = t;
+  $("#go").disabled = !info || !sel.size || busy;
+}
+$("#chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b || b.disabled) return;
+  sel.has(b.dataset.v) ? sel.delete(b.dataset.v) : sel.add(b.dataset.v); drawChips();
+});
+$("#all").onclick = () => { QUALS.forEach(([v]) => allowed(v) && sel.add(v)); drawChips(); };
+$("#none").onclick = () => { sel.clear(); drawChips(); };
+
+async function check() {
+  const u = $("#url").value.trim(), my = ++seq; info = null; drawChips();
+  if (!u) { setMsg(""); return; }
+  if (!/^https?:\/\/\S+\.\S+/i.test(u)) { setMsg("That doesn't look like a link. Paste the full address starting with https://", "bad"); return; }
+  setMsg("Reading link…");
+  try {
+    const r = await api("/api/info", {url: u});
+    if (my !== seq) return;
+    info = r;
+    [...sel].forEach(v => { if (!allowed(v)) sel.delete(v); });
+    if (!sel.size) sel.add(r.video_ok ? "720" : "images");
+    const what = [r.video_ok ? `${r.count} video${r.count==1?"":"s"}` : "", r.images_ok ? "photos" : ""].filter(Boolean).join(" + ");
+    setMsg(`<b>${esc(r.title)}</b> — ${what} found` + (r.note ? `<br><span style="color:var(--bad)">${esc(r.note)}</span>` : ""), "ok");
+    drawChips();
+  } catch (e) { if (my === seq) setMsg(esc(e.message), "bad"); }
+}
+$("#url").addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(check, 450); });
+
+$("#go").onclick = async () => {
+  busy = true; $("#go").textContent = "Choose a folder in the window that opened…"; update();
+  try {
+    const p = await api("/api/pick-folder", {});
+    if (p.cancelled) { resetGo(); return; }
+    if (p.fallback) setMsg("Couldn't open the folder window, so files go to Downloads/Downloader.", "bad");
+    const r = await api("/api/start", {url: $("#url").value.trim(), formats: [...sel], folder: p.path});
+    jobId = r.id; $("#go").textContent = "Downloading…";
+    $("#run").hidden = false; $("#open").hidden = true; $("#cancel").hidden = false; $("#fails").innerHTML = "";
+    $("#statMain").textContent = "Starting…"; $("#sub").textContent = ""; $("#cur").textContent = ""; $("#fill").style.width = "0";
+    timer = setInterval(poll, 800); poll();
+  } catch (e) { resetGo(); setMsg(esc(e.message), "bad"); }
+};
+function resetGo() { busy = false; $("#go").textContent = "Download"; update(); }
+$("#cancel").onclick = () => { if (jobId) api("/api/cancel/" + jobId, {}); $("#statMain").textContent = "Stopping…"; };
+$("#open").onclick = () => api("/api/open/" + jobId, {}).catch(e => setMsg(esc(e.message), "bad"));
+
+function fmtB(n) {
+  if (!n || n < 0) return "0 MB";
+  const u = ["B","KB","MB","GB","TB"]; let i = 0;
+  while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+  return (i < 2 ? Math.round(n) : n.toFixed(n >= 100 ? 0 : 1)) + " " + u[i];
+}
+function fmtT(s) {
+  if (s < 60) return s + " sec";
+  if (s < 3600) return Math.floor(s / 60) + " min " + (s % 60) + " sec";
+  return Math.floor(s / 3600) + " hr " + Math.floor((s % 3600) / 60) + " min";
+}
+async function poll() {
+  let j; try { j = await api("/api/status/" + jobId); } catch (e) { return; }
+  $("#fails").innerHTML = j.failed.map(f => `<li><b>${esc(f.title)}</b> (${esc(f.format)}): ${esc(f.error)}</li>`).join("");
+  if (j.state === "preparing") { $("#statMain").textContent = "Reading link…"; return; }
+  if (j.state === "error") { finish(); $("#statMain").textContent = "Couldn't start"; $("#sub").textContent = ""; $("#cur").textContent = j.error; return; }
+  const ended = j.state === "done" || j.state === "cancelled", imgs = j.phase === "images" && !ended;
+  const total = ended ? j.got : j.total_est;
+  const pct = j.state === "done" ? 100 : (total > 0 ? Math.min(99, Math.floor(j.got / total * 100)) : 0);
+  $("#bar").classList.toggle("busy", imgs);
+  $("#fill").style.width = pct + "%"; $("#bar").setAttribute("aria-valuenow", pct);
+  if (imgs) {
+    $("#statMain").textContent = `${j.images} image${j.images==1?"":"s"} saved · ${fmtB(j.cur_done)}`;
+    $("#sub").textContent = "Downloading images…"; $("#cur").textContent = ""; return;
+  }
+  if (!ended) {
+    $("#statMain").textContent = `${fmtB(j.got)} / ~${fmtB(total)}  (${pct}%)`;
+    const parts = [`File ${Math.min(j.done + 1, j.total)} of ${j.total}`];
+    if (j.speed_bps) parts.unshift(fmtB(j.speed_bps) + "/s");
+    if (total > j.got) parts.push(fmtB(total - j.got) + " left");
+    if (j.eta != null) parts.push(fmtT(j.eta) + " remaining");
+    $("#sub").textContent = parts.join("  ·  ");
+    $("#cur").textContent = j.current + (j.phase === "processing" ? "  —  finishing file (merging / converting)…" : `  —  ${fmtB(j.cur_done)} / ${fmtB(j.cur_total)}`);
+    return;
+  }
+  finish();
+  const vids = j.ok - (j.images > 0 ? 1 : 0), got = [];
+  if (vids > 0) got.push(`${vids} video/audio file${vids==1?"":"s"}`);
+  if (j.images > 0) got.push(`${j.images} image${j.images==1?"":"s"}`);
+  const bad = j.failed.length;
+  $("#statMain").textContent = (j.state === "cancelled" ? "Stopped. " : "Finished. ") + (got.join(" and ") || "Nothing") + " saved" + (bad ? `, ${bad} failed` : "") + ` (${fmtB(j.got)}).`;
+  $("#sub").textContent = ""; $("#cur").textContent = "Saved in the folder you chose.";
+  $("#open").hidden = !got.length;
+}
+function finish() { clearInterval(timer); $("#cancel").hidden = true; $("#bar").classList.remove("busy"); resetGo(); }
+
+(async () => {
+  drawChips();
+  try {
+    const c = await api("/api/config");
+    if (!c.ffmpeg) setMsg("ffmpeg wasn't found, so MP3 and HD video may not work. Run start.bat / start.sh again.", "bad");
+  } catch (e) { setMsg("Can't reach the local app. Start it with start.bat / start.sh, then reload.", "bad"); }
+})();
+</script>
+</body>
+</html>
