@@ -45,8 +45,9 @@ social-media-downloader/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/social-media-downloader.git
-cd social-media-downloader
+git clone https://github.com/yourusername/LEO-Vid-IMGdownloader.git
+
+cd LEO-Vid-IMGdownloader
 ```
 
 ### 2. Create a Virtual Environment
